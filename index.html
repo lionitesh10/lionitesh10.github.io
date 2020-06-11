@@ -5,36 +5,97 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>My Portfolio</title>
     <style>
+      body {
+        height: 96vh;
+        background-color: #111;
+        color: white;
+      }
+      .animate {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+        margin: auto;
+        font-family: Helvetica, sans-serif, Arial;
+        animation: load 1.2s infinite 0s ease-in-out;
+        animation-direction: alternate;
+        text-shadow: 0 0 1px white;
+      }
+      @keyframes load {
+        0% {
+          opacity: 0.08;
+          filter: blur(5px);
+          letter-spacing: 3px;
+        }
+      }
       .main {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
         text-align: center;
+      }
+      a {
+        text-decoration: none;
+        color: aliceblue;
+      }
+      a:hover {
+        color: salmon;
+      }
+      .button {
+        background-color: blueviolet;
+        border: none;
+        color: white;
+        padding: 15px 32px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        margin: 4px 2px;
+        cursor: pointer;
       }
     </style>
   </head>
   <body>
     <div id="loader">
-      loading...
+      <h2 class="animate">Loading</h2>
     </div>
     <div class="main" id="mainContainer" hidden>
-      <img alt="profile_pic" height="100" width="100" id="profileImage" />
-      <h2 id="name"></h2>
-      <p id="bio"></p>
-      <p>Find me on : <a id="githubLink">Github</a></p>
-      <h5 id="followersInfo"></h5>
-
-      <a
-        class="twitter-timeline"
-        data-width="300"
-        data-height="400"
-        href="https://twitter.com/RONBupdates?ref_src=twsrc%5Etfw"
-        >Tweets by RONBupdates</a
-      >
-      <script
-        async
-        src="https://platform.twitter.com/widgets.js"
-        charset="utf-8"
-      ></script>
+      <div class="profile_info">
+        <h2>Profile</h2>
+        <img alt="profile_pic" height="100" width="100" id="profileImage" />
+        <h2 id="name"></h2>
+        <p id="bio"></p>
+        <p>Find me on : <a id="githubLink" style="color: yellow;">Github</a></p>
+        <h5 id="followersInfo"></h5>
+        <h5>
+          Since there are only
+          <p id="repos_count"></p>
+          Repository in my github so Using Tensorflow Repos to show Pagination
+        </h5>
+      </div>
+      <div class="repos">
+        <button id="btnRepos" class="button">
+          Click to See Tensorflow Repos
+        </button>
+        <h3 style="text-align: center;">Tensorflow Repos</h3>
+        <div id="my_Repos"></div>
+      </div>
+      <div class="twitter">
+        <h3 style="text-align: center;">See Routine of Nepal Banda News</h3>
+        <a
+          class="twitter-timeline"
+          data-width="300"
+          data-height="400"
+          href="https://twitter.com/RONBupdates?ref_src=twsrc%5Etfw"
+          >Tweets by RONBupdates</a
+        >
+      </div>
     </div>
-
+    <script
+      async
+      src="https://platform.twitter.com/widgets.js"
+      charset="utf-8"
+    ></script>
     <script>
       fetch("https://api.github.com/users/lionitesh10")
         .then((response) => response.json())
@@ -47,10 +108,45 @@
           document.getElementById("bio").textContent = data["bio"];
           document.getElementById("githubLink").href = data["html_url"];
           document.getElementById("followersInfo").textContent = followersinfo;
-
+          document.getElementById("repos_count").textContent =
+            data["public_repos"];
           document.getElementById("mainContainer").hidden = false;
           document.getElementById("loader").hidden = true;
         });
+      const btnRepos = document.getElementById("btnRepos");
+      btnRepos.addEventListener("click", (e) => getRepos());
+      async function getRepos(
+        url = "https://api.github.com/users/tensorflow/repos"
+      ) {
+        clear();
+        const response = await fetch(url);
+        const link = response.headers.get("link");
+        const links = link.split(",");
+        const urls = links.map((a) => {
+          return {
+            url: a.split(";")[0].replace(">", "").replace("<", ""),
+            title: a.split(";")[1],
+          };
+        });
+        const result = await response.json();
+        result.forEach((i) => {
+          const anchor = document.createElement("a");
+          anchor.href = i.html_url;
+          anchor.textContent = i.name;
+          my_Repos.appendChild(anchor);
+          my_Repos.appendChild(document.createElement("br"));
+        });
+
+        urls.forEach((u) => {
+          const btn = document.createElement("button");
+          btn.textContent = u.title;
+          btn.addEventListener("click", (e) => getRepos(u.url));
+          my_Repos.appendChild(btn);
+        });
+      }
+      function clear() {
+        while (my_Repos.firstChild) my_Repos.removeChild(my_Repos.firstChild);
+      }
     </script>
   </body>
 </html>
